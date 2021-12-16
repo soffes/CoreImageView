@@ -2,11 +2,11 @@
 import AppKit
 import QuartzCore
 
-public class CoreImageView: NSView {
+open class CoreImageView: NSView {
 
     // MARK: - Properties
 
-    var ciImage: CIImage? {
+    open var image: CIImage? {
         didSet {
             setNeedsDisplay(bounds)
         }
@@ -26,10 +26,10 @@ public class CoreImageView: NSView {
 
     // MARK: - View
 
-    public override func draw(_ rect: CGRect) {
-        guard let context = NSGraphicsContext.current?.cgContext,
-            let image = ciImage
-        else { return }
+    open override func draw(_ rect: CGRect) {
+        guard let context = NSGraphicsContext.current?.cgContext, let image = image else {
+            return
+        }
 
         let options: [CIContextOption: Any] = [
             .useSoftwareRenderer: false,
@@ -42,11 +42,11 @@ public class CoreImageView: NSView {
 
     // MARK: - Configuration
 
-    func imageRectForBounds(_ bounds: CGRect) -> CGRect {
+    open func imageRectForBounds(_ bounds: CGRect) -> CGRect {
         var rect = bounds
 
-        if let ciImage = ciImage {
-            rect = rect.aspectFit(ciImage.extent.size)
+        if let image = image {
+            rect = rect.aspectFit(image.extent.size)
         }
 
         return rect
