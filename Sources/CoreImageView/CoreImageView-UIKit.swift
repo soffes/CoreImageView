@@ -10,6 +10,7 @@ open class CoreImageView: GLKView {
     open var image: CIImage? {
         didSet {
             setNeedsDisplay()
+            invalidateIntrinsicContentSize()
         }
     }
 
@@ -36,7 +37,20 @@ open class CoreImageView: GLKView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    // MARK: - View
+    // MARK: - UIView
+
+    open override var intrinsicContentSize: CGSize {
+        guard var size = image?.extent.size else {
+            return CGSize(width: UIView.noIntrinsicMetric, height: UIView.noIntrinsicMetric)
+        }
+
+        if let scale = window?.screen.scale {
+            size.width /= scale
+            size.height /= scale
+        }
+
+        return size
+    }
 
     open override func draw(_ rect: CGRect) {
         precondition(Thread.isMainThread)
@@ -59,6 +73,11 @@ open class CoreImageView: GLKView {
         }
 
         ciContext.draw(image, in: pixelImageRectForBounds(bounds), from: image.extent)
+    }
+
+    open override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        invalidateIntrinsicContentSize()
     }
 
     // MARK: - Configuration

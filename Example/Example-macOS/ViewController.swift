@@ -2,6 +2,7 @@ import AppKit
 import CoreImageView
 
 final class ViewController: NSViewController {
+
     // MARK: - Properties
 
     private let imageView = CoreImageView()

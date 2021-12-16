@@ -9,6 +9,7 @@ open class CoreImageView: NSView {
     open var image: CIImage? {
         didSet {
             setNeedsDisplay(bounds)
+            invalidateIntrinsicContentSize()
         }
     }
 
@@ -16,15 +17,28 @@ open class CoreImageView: NSView {
 
     public override init(frame: NSRect) {
         super.init(frame: frame)
-        wantsLayer = true
+        initialize()
     }
 
     required public init?(coder: NSCoder) {
         super.init(coder: coder)
-        wantsLayer = true
+        initialize()
     }
 
     // MARK: - View
+
+    open override var intrinsicContentSize: CGSize {
+        guard var size = image?.extent.size else {
+            return CGSize(width: NSView.noIntrinsicMetric, height: NSView.noIntrinsicMetric)
+        }
+
+        if let scale = window?.backingScaleFactor {
+            size.width /= scale
+            size.height /= scale
+        }
+
+        return size
+    }
 
     open override func draw(_ rect: CGRect) {
         guard let context = NSGraphicsContext.current?.cgContext, let image = image else {
@@ -40,6 +54,11 @@ open class CoreImageView: NSView {
         ciContext.draw(image, in: imageRectForBounds(bounds), from: image.extent)
     }
 
+    open override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        invalidateIntrinsicContentSize()
+    }
+
     // MARK: - Configuration
 
     open func imageRectForBounds(_ bounds: CGRect) -> CGRect {
@@ -50,6 +69,12 @@ open class CoreImageView: NSView {
         }
 
         return rect
+    }
+
+    // MARK: - Private
+
+    private func initialize() {
+        wantsLayer = true
     }
 }
 #endif
