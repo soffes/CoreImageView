@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="19455" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
     <dependencies>
+        <deployment identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="19455"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -709,7 +710,21 @@
                     <view key="view" id="m2S-Jp-Qdl">
                         <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
                         <autoresizingMask key="autoresizingMask"/>
+                        <subviews>
+                            <customView translatesAutoresizingMaskIntoConstraints="NO" id="XnL-K0-ZgV" customClass="CoreImageView" customModule="CoreImageView">
+                                <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
+                            </customView>
+                        </subviews>
+                        <constraints>
+                            <constraint firstItem="XnL-K0-ZgV" firstAttribute="top" secondItem="m2S-Jp-Qdl" secondAttribute="top" id="QK7-9w-4Fa"/>
+                            <constraint firstAttribute="bottom" secondItem="XnL-K0-ZgV" secondAttribute="bottom" id="TDs-lx-nGD"/>
+                            <constraint firstItem="XnL-K0-ZgV" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" id="jDP-Jn-Ix2"/>
+                            <constraint firstAttribute="trailing" secondItem="XnL-K0-ZgV" secondAttribute="trailing" id="jxS-FP-oay"/>
+                        </constraints>
                     </view>
+                    <connections>
+                        <outlet property="imageView" destination="XnL-K0-ZgV" id="K37-Nf-ngg"/>
+                    </connections>
                 </viewController>
                 <customObject id="rPt-NT-nkU" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>

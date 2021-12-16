@@ -59,6 +59,10 @@ open class CoreImageView: MTKView {
     }
 
     open override func draw(_ rect: CGRect) {
+        guard var image = ciImage else {
+            return
+        }
+
         let device: MTLDevice
 
         if let currentDevice = self.device {
@@ -108,28 +112,25 @@ open class CoreImageView: MTKView {
         }
 
         let texture = drawable.texture
-        clear(commandBuffer: commandBuffer)
 
-        if var image = ciImage {
-            // TODO: No idea why this is only required on the simulator and not macOS or an iOS device
+        // TODO: No idea why this is only required on the simulator and not macOS or an iOS device
 #if targetEnvironment(simulator)
-            // Transform to unflipped
-            image = image.transformed(by: CGAffineTransform(scaleX: 1, y: -1))
-            image = image.transformed(by: CGAffineTransform(translationX: 0, y: image.extent.height))
+        // Transform to unflipped
+        image = image.transformed(by: CGAffineTransform(scaleX: 1, y: -1))
+        image = image.transformed(by: CGAffineTransform(translationX: 0, y: image.extent.height))
 #endif
 
-            // Aspect fit
-            let textureBounds = CGRect(x: 0, y: 0, width: texture.width, height: texture.height)
-            let rect = imageRectForBounds(textureBounds)
-            image = image.transformed(by: CGAffineTransform(scaleX: rect.width / image.extent.width,
-                                                            y: rect.height / image.extent.height))
-            image = image.transformed(by: CGAffineTransform(translationX: rect.origin.x, y: rect.origin.y))
+        // Aspect fit
+        let textureBounds = CGRect(x: 0, y: 0, width: texture.width, height: texture.height)
+        let rect = imageRectForBounds(textureBounds)
+        image = image.transformed(by: CGAffineTransform(scaleX: rect.width / image.extent.width,
+                                                        y: rect.height / image.extent.height))
+        image = image.transformed(by: CGAffineTransform(translationX: rect.origin.x, y: rect.origin.y))
 
-            // Draw
-            let colorSpace = image.colorSpace ?? CGColorSpaceCreateDeviceRGB()
-            ciContext.render(image, to: texture, commandBuffer: commandBuffer, bounds: textureBounds,
-                             colorSpace: colorSpace)
-        }
+        // Draw
+        let colorSpace = image.colorSpace ?? CGColorSpaceCreateDeviceRGB()
+        ciContext.render(image, to: texture, commandBuffer: commandBuffer, bounds: textureBounds,
+                         colorSpace: colorSpace)
 
         commandBuffer.present(drawable)
         commandBuffer.commit()
@@ -162,19 +163,17 @@ open class CoreImageView: MTKView {
     // MARK: - Private
 
     private func initialize() {
+#if canImport(AppKit)
+        wantsLayer = true
+        layer?.isOpaque = false
+        layer?.backgroundColor = .clear
+#elseif canImport(UIKit)
+        backgroundColor = .clear
+#endif
+
         clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 1)
         framebufferOnly = false
         enableSetNeedsDisplay = true
         isPaused = true
-    }
-
-    private func clear(commandBuffer: MTLCommandBuffer) {
-        guard let renderPassDescriptor = currentRenderPassDescriptor else {
-            assertionFailure("Missing render pass descriptor")
-            return
-        }
-
-        let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor)!
-        renderEncoder.endEncoding()
     }
 }
