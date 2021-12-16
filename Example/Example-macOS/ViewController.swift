@@ -23,6 +23,6 @@ final class ViewController: NSViewController {
         ])
 
         let image = NSImage(named: "test")!
-        imageView.image = CIImage(cgImage: image.cgImage(forProposedRect: nil, context: nil, hints: nil)!)
+        imageView.ciImage = CIImage(cgImage: image.cgImage(forProposedRect: nil, context: nil, hints: nil)!)
     }
 }

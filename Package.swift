@@ -5,8 +5,8 @@ import PackageDescription
 let package = Package(
     name: "CoreImageView",
     platforms: [
-        .macOS(.v11),
-        .iOS(.v15)
+        .macOS(.v10_13),
+        .iOS(.v14)
     ],
     products: [
         .library(name: "CoreImageView", targets: ["CoreImageView"])

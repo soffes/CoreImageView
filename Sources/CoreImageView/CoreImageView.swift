@@ -10,46 +10,33 @@ open class CoreImageView: MTKView {
 
     // MARK: - Properties
 
-    open var image: CIImage? {
+    open var ciImage: CIImage? {
         didSet {
             setNeedsDisplay(bounds)
             invalidateIntrinsicContentSize()
         }
     }
 
-    private let ciContext: CIContext
-    private let commandQueue: MTLCommandQueue
+    private var ciContext: CIContext?
+    private var commandQueue: MTLCommandQueue?
 
     // MARK: - Initializers
 
     public override init(frame: CGRect = .zero, device: MTLDevice? = nil) {
-        guard let device = device ?? MTLCreateSystemDefaultDevice(), let queue = device.makeCommandQueue() else {
-            fatalError("Missing MTLDevice")
-        }
-
-        commandQueue = queue
-
-        ciContext = CIContext(mtlDevice: device, options: [
-            .workingColorSpace: NSNull()
-        ])
-
         super.init(frame: frame, device: device)
-
-        clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 1)
-        framebufferOnly = false
-        enableSetNeedsDisplay = true
-        isPaused = true
+        initialize()
     }
 
     @available(*, unavailable)
-    public required init(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+    public required init(coder: NSCoder) {
+        super.init(coder: coder)
+        initialize()
     }
 
     // MARK: - View
 
     open override var intrinsicContentSize: CGSize {
-        guard var size = image?.extent.size else {
+        guard var size = ciImage?.extent.size else {
 #if canImport(AppKit)
             return CGSize(width: NSView.noIntrinsicMetric, height: NSView.noIntrinsicMetric)
 #else
@@ -72,6 +59,44 @@ open class CoreImageView: MTKView {
     }
 
     open override func draw(_ rect: CGRect) {
+        let device: MTLDevice
+
+        if let currentDevice = self.device {
+            device = currentDevice
+        } else {
+            guard let systemDevice = MTLCreateSystemDefaultDevice() else {
+                assertionFailure("Missing MTLDevice")
+                return
+            }
+
+            device = systemDevice
+            self.device = device
+        }
+
+        let commandQueue: MTLCommandQueue
+        if let currentCommandQueue = self.commandQueue {
+            commandQueue = currentCommandQueue
+        } else {
+            guard let queue = device.makeCommandQueue() else {
+                assertionFailure("Missing MTLDevice")
+                return
+            }
+
+            commandQueue = queue
+            self.commandQueue = commandQueue
+        }
+
+        let ciContext: CIContext
+        if let currentContext = self.ciContext {
+            ciContext = currentContext
+        } else {
+            ciContext = CIContext(mtlDevice: device, options: [
+                .workingColorSpace: NSNull()
+            ])
+
+            self.ciContext = ciContext
+        }
+
         guard let commandBuffer = commandQueue.makeCommandBuffer() else {
             assertionFailure("Failed to create command buffer")
             return
@@ -85,7 +110,7 @@ open class CoreImageView: MTKView {
         let texture = drawable.texture
         clear(commandBuffer: commandBuffer)
 
-        if var image = image {
+        if var image = ciImage {
             // TODO: No idea why this is only required on the simulator and not macOS or an iOS device
 #if targetEnvironment(simulator)
             // Transform to unflipped
@@ -127,7 +152,7 @@ open class CoreImageView: MTKView {
     open func imageRectForBounds(_ bounds: CGRect) -> CGRect {
         var rect = bounds
 
-        if let image = image {
+        if let image = ciImage {
             rect = rect.aspectFit(image.extent.size)
         }
 
@@ -135,6 +160,13 @@ open class CoreImageView: MTKView {
     }
 
     // MARK: - Private
+
+    private func initialize() {
+        clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 1)
+        framebufferOnly = false
+        enableSetNeedsDisplay = true
+        isPaused = true
+    }
 
     private func clear(commandBuffer: MTLCommandBuffer) {
         guard let renderPassDescriptor = currentRenderPassDescriptor else {

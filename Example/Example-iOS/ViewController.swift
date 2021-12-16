@@ -23,7 +23,7 @@ final class ViewController: UIViewController {
         ])
 
         let image = UIImage(named: "test")!
-        imageView.image = CIImage(cgImage: image.cgImage!)
+        imageView.ciImage = CIImage(cgImage: image.cgImage!)
     }
 
     override var preferredStatusBarStyle: UIStatusBarStyle {
