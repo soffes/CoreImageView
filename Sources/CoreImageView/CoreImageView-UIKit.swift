@@ -3,11 +3,11 @@ import CoreImage
 import GLKit
 import UIKit
 
-public class CoreImageView: GLKView {
+open class CoreImageView: GLKView {
 
     // MARK: - Properties
 
-    var ciImage: CIImage? {
+    open var image: CIImage? {
         didSet {
             setNeedsDisplay()
         }
@@ -31,13 +31,16 @@ public class CoreImageView: GLKView {
         backgroundColor = .black
     }
 
+    @available(*, unavailable)
     public required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
     // MARK: - View
 
-    public override func draw(_ rect: CGRect) {
+    open override func draw(_ rect: CGRect) {
+        precondition(Thread.isMainThread)
+
         glClear(GLbitfield(GL_COLOR_BUFFER_BIT))
 
         if let backgroundColor = (backgroundColor?.cgColor).flatMap(CIColor.init) {
@@ -51,23 +54,20 @@ public class CoreImageView: GLKView {
             ciContext.draw(colorImage, in: pixelBounds, from: colorImage.extent)
         }
 
-        guard var image = ciImage else {
+        guard let image = image else {
             return
         }
-
-        image = image.transformed(by: CGAffineTransform(scaleX: 1, y: -1))
-        image = image.transformed(by: CGAffineTransform(translationX: 0, y: image.extent.height))
 
         ciContext.draw(image, in: pixelImageRectForBounds(bounds), from: image.extent)
     }
 
     // MARK: - Configuration
 
-    func imageRectForBounds(_ bounds: CGRect) -> CGRect {
+    open func imageRectForBounds(_ bounds: CGRect) -> CGRect {
         var rect = bounds
 
-        if let ciImage = ciImage {
-            rect = rect.aspectFit(ciImage.extent.size)
+        if let image = image {
+            rect = rect.aspectFit(image.extent.size)
         }
 
         return rect
